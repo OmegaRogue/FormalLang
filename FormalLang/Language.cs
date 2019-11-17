@@ -12,19 +12,19 @@ namespace FormalLang
 		private static readonly Random Rng = new Random();
 
 		public string Startsymbol;
-		public char Trennzeichen;
-		public string[] Terminalsymbole;
-		public string[] Nichtterminalsymbole;
-		public Dictionary<string, string[]> Regeln;
+		public char Seperator;
+		public string[] Alphabet;
+		public string[] Variables;
+		public Dictionary<string, string[]> Rules;
 		
-		public Language(string                       startsymbol, char trennzeichen, string[] terminalsymbole, string[] nichtterminalsymbole,
-						Dictionary<string, string[]> regeln)
+		public Language(string                       startsymbol, char seperator, string[] alphabet, string[] variables,
+						Dictionary<string, string[]> rules = null)
 		{
 			Startsymbol          = startsymbol;
-			Trennzeichen         = trennzeichen;
-			Terminalsymbole      = terminalsymbole;
-			Nichtterminalsymbole = nichtterminalsymbole;
-			Regeln               = regeln;
+			Seperator         = seperator;
+			Alphabet = alphabet;
+			Variables = variables;
+			Rules = rules ?? new Dictionary<string, string[]>();
 		}
 		
 		public string Replace(string input, bool output = false)
@@ -32,19 +32,19 @@ namespace FormalLang
 			if (output) Console.WriteLine(input);
 			while (true)
 			{
-				var stringarray = input.Split(Trennzeichen);
+				var stringarray = input.Split(Seperator);
 				var buffer      = "";
 				var done        = false;
 				var wasntdone   = false;
 				foreach (var s in stringarray)
 				{
-					if (Terminalsymbole.Contains(s))
+					if (Alphabet.Contains(s))
 					{
 						done   =  true;
-						buffer += s + Trennzeichen;
+						buffer += s + Seperator;
 					}
 
-					if (Nichtterminalsymbole.Contains(s))
+					if (Variables.Contains(s))
 					{
 						done      = false;
 						wasntdone = true;
@@ -53,8 +53,8 @@ namespace FormalLang
 					if (done) continue;
 					try
 					{
-						var arrBuffer = Regeln[s];
-						buffer += arrBuffer[Rng.Next(arrBuffer.Length)] + Trennzeichen;
+						var arrBuffer = Rules[s];
+						buffer += arrBuffer[Rng.Next(arrBuffer.Length)] + Seperator;
 					}
 					catch (KeyNotFoundException)
 					{
@@ -78,6 +78,12 @@ namespace FormalLang
 			file.Write(JsonConvert.SerializeObject(lang, Formatting.Indented));
 			file.Flush();
 			file.Close();
+		}
+
+		public Language AddRule(string inSymbol, params string[] outSymbols)
+		{
+			Rules.Add(inSymbol, outSymbols);
+			return this;
 		}
 
 		
